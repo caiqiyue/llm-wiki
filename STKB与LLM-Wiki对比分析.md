@@ -122,6 +122,8 @@ G0 治理层 ← K1-K13 知识领域 ← A1 应用映射层（AI教练/AI助理/
 | 多语言支持 | i18n | output_language | **概念一致** |
 | 知识图谱 | graph-filters | 跨域链接 | **概念一致** |
 
+![架构对比图](./assests/STKB与LLM-Wiki-对比图.png)
+
 ### 3.2 共同的底层逻辑
 
 ```

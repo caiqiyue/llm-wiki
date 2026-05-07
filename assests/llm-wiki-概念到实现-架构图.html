@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LLM Wiki 三层架构与核心流程</title>
+<style>
+/* Design System: 科技蓝 */
+:root {
+  --primary: #2563EB;
+  --primary-dark: #1E40AF;
+  --primary-light: #3B82F6;
+  --accent: #06B6D4;
+  --accent-light: #22D3EE;
+  --bg-dark: #0F172A;
+  --bg-light: #F8FAFC;
+  --surface: #FFFFFF;
+  --text-primary: #1E293B;
+  --text-secondary: #64748B;
+  --text-light: #FFFFFF;
+  --border: #E2E8F0;
+  --shadow: rgba15, 23, 42, 0.1;
+  --radius: 8px;
+  --radius-lg: 16px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: var(--bg-light);
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+
+.diagram-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+h1 {
+  font-size: 32px;
+  color: var(--primary-dark);
+  margin-bottom: 32px;
+  text-align: center;
+}
+
+.section {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 32px;
+  margin-bottom: 40px;
+  box-shadow: 0 4px 24px var(--shadow);
+}
+
+.section-title {
+  font-size: 20px;
+  color: var(--primary);
+  margin-bottom: 24px;
+  font-weight: 600;
+}
+
+/* 三层架构图 */
+.architecture-diagram {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  align-items: center;
+  padding: 40px 20px;
+}
+
+.layer {
+  width: 100%;
+  max-width: 900px;
+  padding: 28px 40px;
+  border-radius: var(--radius);
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: transform 0.2s;
+}
+
+.layer:hover {
+  transform: scale(1.02);
+}
+
+.layer-source {
+  background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);
+  border: 2px solid var(--primary-light);
+}
+
+.layer-wiki {
+  background: linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%);
+  border: 2px solid #22C55E;
+}
+
+.layer-schema {
+  background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+  border: 2px solid #F59E0B;
+}
+
+.layer-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  margin-right: 24px;
+  flex-shrink: 0;
+}
+
+.layer-source .layer-icon { background: var(--primary); color: white; }
+.layer-wiki .layer-icon { background: #22C55E; color: white; }
+.layer-schema .layer-icon { background: #F59E0B; color: white; }
+
+.layer-content {
+  flex: 1;
+}
+
+.layer-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.layer-desc {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.layer-meta {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.layer-tag {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.layer-source .layer-tag { background: var(--primary); color: white; }
+.layer-wiki .layer-tag { background: #22C55E; color: white; }
+.layer-schema .layer-tag { background: #F59E0B; color: white; }
+
+/* 箭头连接器 */
+.arrow-down {
+  width: 0;
+  height: 0;
+  border-left: 20px solid transparent;
+  border-right: 20px solid transparent;
+  border-top: 24px solid var(--text-secondary);
+  opacity: 0.4;
+  margin: 8px 0;
+}
+
+/* 核心流程图 */
+.flow-diagram {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  padding: 40px 20px;
+  flex-wrap: wrap;
+}
+
+.flow-node {
+  background: var(--surface);
+  border: 2px solid var(--primary);
+  border-radius: var(--radius);
+  padding: 20px 28px;
+  text-align: center;
+  min-width: 140px;
+  position: relative;
+}
+
+.flow-node.primary {
+  background: var(--primary);
+  color: white;
+}
+
+.flow-node h4 {
+  font-size: 16px;
+  margin-bottom: 4px;
+}
+
+.flow-node p {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.flow-arrow {
+  width: 60px;
+  height: 2px;
+  background: var(--primary);
+  position: relative;
+  margin: 0 -4px;
+}
+
+.flow-arrow::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: -6px;
+  border-left: 10px solid var(--primary);
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+}
+
+/* 项目架构图 */
+.project-arch {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  padding: 20px;
+}
+
+.arch-layer {
+  background: var(--bg-light);
+  border-radius: var(--radius);
+  padding: 20px;
+  border: 1px solid var(--border);
+}
+
+.arch-layer-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--primary);
+}
+
+.arch-item {
+  padding: 10px 12px;
+  background: var(--surface);
+  border-radius: 6px;
+  margin-bottom: 8px;
+  font-size: 13px;
+  border-left: 3px solid var(--accent);
+}
+
+.arch-item:last-child {
+  margin-bottom: 0;
+}
+
+/* 对比表格 */
+.compare-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.compare-table th {
+  background: var(--primary);
+  color: white;
+  padding: 14px 16px;
+  text-align: left;
+  font-weight: 600;
+}
+
+.compare-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.compare-table tr:nth-child(even) {
+  background: var(--bg-light);
+}
+
+.compare-table tr:hover {
+  background: #EFF6FF;
+}
+
+.highlight-cell {
+  background: #FEF3C7 !important;
+  font-weight: 600;
+}
+</style>
+</head>
+<body>
+<div class="diagram-container">
+  <h1>LLM Wiki：从概念到实现全景分析</h1>
+
+  <!-- 三层架构图 -->
+  <div class="section">
+    <div class="section-title">核心三层架构</div>
+    <div class="architecture-diagram">
+      <div class="layer layer-source">
+        <div class="layer-icon">📄</div>
+        <div class="layer-content">
+          <div class="layer-title">Raw Sources（原始资料层）</div>
+          <div class="layer-desc">事实底座、Source of Truth，原则上不可变。包含 PDF、DOCX、PPT、TXT 等原始文档，以及从浏览器剪藏的网页内容。</div>
+        </div>
+        <div class="layer-meta">
+          <span class="layer-tag">不可变</span>
+        </div>
+      </div>
+
+      <div class="arrow-down"></div>
+
+      <div class="layer layer-wiki">
+        <div class="layer-icon">📚</div>
+        <div class="layer-content">
+          <div class="layer-title">Wiki（知识中间层）</div>
+          <div class="layer-desc">LLM 维护的结构化 Markdown 知识层，持续更新。包含实体页、概念页、来源摘要、主题页、对比页、综合判断页等。</div>
+        </div>
+        <div class="layer-meta">
+          <span class="layer-tag">持续演化</span>
+        </div>
+      </div>
+
+      <div class="arrow-down"></div>
+
+      <div class="layer layer-schema">
+        <div class="layer-icon">⚙️</div>
+        <div class="layer-content">
+          <div class="layer-title">Schema（约束层）</div>
+          <div class="layer-desc">约束 LLM 行为的规则、目录结构、命名规范、摄取/查询流程、Lint 规则。包含 purpose.md 和 schema.md。</div>
+        </div>
+        <div class="layer-meta">
+          <span class="layer-tag">可共同演化</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 核心流程图 -->
+  <div class="section">
+    <div class="section-title">核心操作流程：Ingest → Query → Lint</div>
+    <div class="flow-diagram">
+      <div class="flow-node primary">
+        <h4>Ingest</h4>
+        <p>摄取整合</p>
+      </div>
+      <div class="flow-arrow"></div>
+      <div class="flow-node">
+        <h4>Search</h4>
+        <p>检索定位</p>
+      </div>
+      <div class="flow-arrow"></div>
+      <div class="flow-node">
+        <h4>Query</h4>
+        <p>问答综合</p>
+      </div>
+      <div class="flow-arrow"></div>
+      <div class="flow-node">
+        <h4>Lint</h4>
+        <p>质量检查</p>
+      </div>
+      <div class="flow-arrow"></div>
+      <div class="flow-node">
+        <h4>Review</h4>
+        <p>人工审核</p>
+      </div>
+    </div>
+    <p style="text-align:center; color: var(--text-secondary); margin-top: 20px; font-size: 14px;">
+      摄取阶段完成"知识编译"，查询阶段完成"知识召回"，Lint + Review 完成"质量治理"
+    </p>
+  </div>
+
+  <!-- 项目架构图 -->
+  <div class="section">
+    <div class="section-title">llm_wiki 项目整体架构</div>
+    <div class="project-arch">
+      <div class="arch-layer">
+        <div class="arch-layer-title">交互层</div>
+        <div class="arch-item">layout（三栏布局）</div>
+        <div class="arch-item">chat（多会话聊天）</div>
+        <div class="arch-item">sources（文件树）</div>
+        <div class="arch-item">graph（图谱可视化）</div>
+        <div class="arch-item">lint / review</div>
+      </div>
+      <div class="arch-layer">
+        <div class="arch-layer-title">业务逻辑层</div>
+        <div class="arch-item">ingest.ts</div>
+        <div class="arch-item">search.ts</div>
+        <div class="arch-item">lint.ts</div>
+        <div class="arch-item">deep-research.ts</div>
+        <div class="arch-item">embedding.ts</div>
+        <div class="arch-item">wiki-graph.ts</div>
+      </div>
+      <div class="arch-layer">
+        <div class="arch-layer-title">状态持久化层</div>
+        <div class="arch-item">wiki-store.ts</div>
+        <div class="arch-item">chat-store.ts</div>
+        <div class="arch-item">review-store.ts</div>
+        <div class="arch-item">research-store.ts</div>
+        <div class="arch-item">persist.ts</div>
+      </div>
+      <div class="arch-layer">
+        <div class="arch-layer-title">系统能力层</div>
+        <div class="arch-item">fs.rs（文件处理）</div>
+        <div class="arch-item">vectorstore.rs</div>
+        <div class="arch-item">project.rs</div>
+        <div class="arch-item">clip_server.rs</div>
+        <div class="arch-item">claude_cli.rs</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LLM Wiki vs RAG 对比表 -->
+  <div class="section">
+    <div class="section-title">LLM Wiki 与传统 RAG 对比</div>
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th>维度</th>
+          <th>传统 RAG</th>
+          <th>LLM Wiki</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>处理重心</strong></td>
+          <td>查询时检索</td>
+          <td class="highlight-cell">摄取时整合</td>
+        </tr>
+        <tr>
+          <td><strong>主对象</strong></td>
+          <td>原始文本块</td>
+          <td class="highlight-cell">结构化 Wiki 页面</td>
+        </tr>
+        <tr>
+          <td><strong>知识积累</strong></td>
+          <td>弱</td>
+          <td class="highlight-cell">强</td>
+        </tr>
+        <tr>
+          <td><strong>跨文档综合</strong></td>
+          <td>每次重做</td>
+          <td class="highlight-cell">可沉淀复用</td>
+        </tr>
+        <tr>
+          <td><strong>结果去向</strong></td>
+          <td>停留在回答</td>
+          <td class="highlight-cell">可回写成新页面</td>
+        </tr>
+        <tr>
+          <td><strong>维护机制</strong></td>
+          <td>通常较弱</td>
+          <td class="highlight-cell">明确的维护流程</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>STKB vs LLM-Wiki 架构对比</title>
+<style>
+:root {
+  --primary: #2563EB;
+  --primary-dark: #1E40AF;
+  --accent: #06B6D4;
+  --accent2: #8B5CF6;
+  --bg-dark: #0F172A;
+  --bg-light: #F8FAFC;
+  --surface: #FFFFFF;
+  --text-primary: #1E293B;
+  --text-secondary: #64748B;
+  --border: #E2E8F0;
+  --radius: 8px;
+  --radius-lg: 16px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif; background: var(--bg-light); color: var(--text-primary); line-height: 1.6; }
+
+.container { max-width: 1400px; margin: 0 auto; padding: 40px 20px; }
+h1 { font-size: 32px; color: var(--primary-dark); margin-bottom: 32px; text-align: center; }
+
+.card { background: var(--surface); border-radius: var(--radius-lg); padding: 32px; margin-bottom: 40px; box-shadow: 0 4px 24px rgba(15,23,42,0.08); }
+.card-title { font-size: 20px; color: var(--primary); margin-bottom: 24px; font-weight: 600; display: flex; align-items: center; gap: 12px; }
+.badge { background: var(--primary); color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+
+/* 两列对比 */
+.comparison-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+.col { background: var(--bg-light); border-radius: var(--radius); padding: 24px; }
+.col-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid var(--border); }
+.col-icon { width: 48px; height: 48px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+.col-title { font-size: 18px; font-weight: 700; }
+.col-subtitle { font-size: 12px; color: var(--text-secondary); }
+
+.llm-wiki-col .col-icon { background: var(--primary); color: white; }
+.stkb-col .col-icon { background: var(--accent2); color: white; }
+
+/* 知识域 */
+.domains-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.domain-item { background: var(--surface); border-radius: var(--radius); padding: 12px 16px; border-left: 3px solid var(--accent); font-size: 13px; }
+.domain-item .num { font-weight: 700; color: var(--primary); margin-right: 8px; }
+.domain-item.highlight { background: #FEF3C7; border-left-color: #F59E0B; }
+
+/* 三层架构 */
+.architecture-flow { display: flex; align-items: center; justify-content: center; gap: 0; padding: 30px 0; }
+.arch-box { background: var(--surface); border: 2px solid var(--primary); border-radius: var(--radius); padding: 20px 28px; text-align: center; min-width: 180px; }
+.arch-box.highlight { background: var(--primary); color: white; }
+.arch-box h4 { font-size: 16px; margin-bottom: 4px; }
+.arch-box p { font-size: 12px; opacity: 0.8; }
+.arch-arrow { width: 50px; height: 2px; background: var(--primary); margin: 0 -4px; position: relative; }
+.arch-arrow::after { content: ''; position: absolute; right: 0; top: -5px; border-left: 8px solid var(--primary); border-top: 6px solid transparent; border-bottom: 6px solid transparent; }
+
+/* 共同设计模式 */
+.patterns-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.pattern-card { background: var(--bg-light); border-radius: var(--radius); padding: 24px; text-align: center; }
+.pattern-icon { width: 56px; height: 56px; background: var(--primary); color: white; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 16px; }
+.pattern-card h4 { font-size: 16px; margin-bottom: 8px; color: var(--primary); }
+.pattern-card p { font-size: 13px; color: var(--text-secondary); }
+
+/* 相似度表格 */
+.sim-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.sim-table th { background: var(--primary); color: white; padding: 14px 16px; text-align: left; font-weight: 600; }
+.sim-table td { padding: 12px 16px; border-bottom: 1px solid var(--border); }
+.sim-table tr:nth-child(even) { background: var(--bg-light); }
+.sim-table .match { background: #DCFCE7; font-weight: 600; color: #166534; }
+.sim-table .partial { background: #FEF3C7; }
+
+/* 流程图 */
+.pipeline-flow { display: flex; align-items: center; justify-content: center; gap: 0; flex-wrap: wrap; padding: 20px 0; }
+.pipeline-node { background: var(--surface); border: 2px solid var(--border); border-radius: var(--radius); padding: 16px 20px; text-align: center; min-width: 130px; }
+.pipeline-node.stage0 { border-color: #94A3B8; }
+.pipeline-node.stage1 { border-color: var(--accent); }
+.pipeline-node.stage2 { border-color: var(--primary); }
+.pipeline-node.review { border-color: var(--accent2); }
+.pipeline-node h5 { font-size: 14px; margin-bottom: 4px; }
+.pipeline-node p { font-size: 11px; color: var(--text-secondary); }
+.pipeline-arrow { width: 40px; height: 2px; background: var(--text-secondary); margin: 0 -4px; opacity: 0.5; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>STKB 与 LLM-Wiki 架构对比分析</h1>
+
+  <!-- 架构对比 -->
+  <div class="card">
+    <div class="card-title">
+      核心架构对比
+      <span class="badge">高度一致</span>
+    </div>
+    <div class="comparison-grid">
+      <div class="col llm-wiki-col">
+        <div class="col-header">
+          <div class="col-icon">📚</div>
+          <div>
+            <div class="col-title">LLM-Wiki</div>
+            <div class="col-subtitle">通用知识库</div>
+          </div>
+        </div>
+        <div style="margin-bottom: 16px;">
+          <div class="architecture-flow">
+            <div class="arch-box"><h4>文档输入</h4><p>PDF/PPT/DOCX</p></div>
+            <div class="arch-arrow"></div>
+            <div class="arch-box"><h4>解析</h4><p>分块</p></div>
+            <div class="arch-arrow"></div>
+            <div class="arch-box highlight"><h4>Embedding</h4><p>向量存储</p></div>
+          </div>
+        </div>
+        <div style="font-size: 13px; color: var(--text-secondary);">
+          <p>→ 知识抽取（LLM）</p>
+          <p>→ Wiki 页面生成</p>
+          <p>→ 实体/概念去重合并</p>
+          <p>→ 知识图谱构建</p>
+          <p>→ 增量更新 + 质量检查</p>
+        </div>
+      </div>
+
+      <div class="col stkb-col">
+        <div class="col-header">
+          <div class="col-icon">💼</div>
+          <div>
+            <div class="col-title">STKB</div>
+            <div class="col-subtitle">销售培训垂直领域</div>
+          </div>
+        </div>
+        <div class="pipeline-flow" style="margin-bottom: 16px;">
+          <div class="pipeline-node stage0"><h5>Stage 0</h5><p>预处理+扫描</p></div>
+          <div class="pipeline-arrow"></div>
+          <div class="pipeline-node stage1"><h5>Stage 1</h5><p>领域并行抽取</p></div>
+          <div class="pipeline-arrow"></div>
+          <div class="pipeline-node stage2"><h5>Stage 2</h5><p>链接+打标</p></div>
+        </div>
+        <div style="font-size: 13px; color: var(--text-secondary);">
+          <p>→ Human Review（通过/修改/拒绝）</p>
+          <p>→ 存储至知识库</p>
+          <p>→ G0治理层</p>
+          <p>→ K1-K13 知识域</p>
+          <p>→ A1 应用映射层</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STKB 13个知识域 -->
+  <div class="card">
+    <div class="card-title">STKB 13个知识域（K1-K13）</div>
+    <div class="domains-grid">
+      <div class="domain-item"><span class="num">K1</span>Product 产品知识</div>
+      <div class="domain-item"><span class="num">K2</span>Customer Persona 客户画像</div>
+      <div class="domain-item"><span class="num">K3</span>Customer Needs 客户需求</div>
+      <div class="domain-item"><span class="num">K4</span>Sales Scene 销售场景</div>
+      <div class="domain-item"><span class="num">K5</span>Sales Stage 销售阶段</div>
+      <div class="domain-item"><span class="num">K6</span>Competency Model 能力模型</div>
+      <div class="domain-item"><span class="num">K7</span>Sales Strategy 销售策略</div>
+      <div class="domain-item"><span class="num">K8</span>Talk/Script 话术结构</div>
+      <div class="domain-item"><span class="num">K9</span>Objection 异议处理</div>
+      <div class="domain-item"><span class="num">K10</span>Reaction Patterns 客户反应</div>
+      <div class="domain-item"><span class="num">K11</span>Service Rights 服务权益</div>
+      <div class="domain-item"><span class="num">K12</span>Compliance 合规规则</div>
+      <div class="domain-item highlight"><span class="num">K13</span>Training Evaluation 培训评估</div>
+    </div>
+  </div>
+
+  <!-- 共同设计模式 -->
+  <div class="card">
+    <div class="card-title">共享设计模式</div>
+    <div class="patterns-grid">
+      <div class="pattern-card">
+        <div class="pattern-icon">📝</div>
+        <h4>三段式文本</h4>
+        <p>canonical / retrieval / prompt 分离，平衡权威性与检索效率</p>
+      </div>
+      <div class="pattern-card">
+        <div class="pattern-icon">✓</div>
+        <h4>治理层抽象</h4>
+        <p>审核工作流 + 状态机，保证知识质量</p>
+      </div>
+      <div class="pattern-card">
+        <div class="pattern-icon">⬆</div>
+        <h4>增量更新</h4>
+        <p>避免重复处理相同内容，基于内容哈希缓存</p>
+      </div>
+      <div class="pattern-card">
+        <div class="pattern-icon">🔄</div>
+        <h4>去重合并</h4>
+        <p>实体唯一性保证，跨摄入合并</p>
+      </div>
+      <div class="pattern-card">
+        <div class="pattern-icon">📊</div>
+        <h4>置信度打分</h4>
+        <p>质量量化指标，指导人工审核</p>
+      </div>
+      <div class="pattern-card">
+        <div class="pattern-icon">🔗</div>
+        <h4>知识图谱</h4>
+        <p>实体关系网络，支持跨域链接</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 相似度对比表 -->
+  <div class="card">
+    <div class="card-title">核心相似性分析</div>
+    <table class="sim-table">
+      <thead>
+        <tr>
+          <th>维度</th>
+          <th>LLM-Wiki</th>
+          <th>STKB</th>
+          <th>一致性</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>三段式文本</strong></td>
+          <td>✓</td>
+          <td>✓</td>
+          <td class="match">完全一致</td>
+        </tr>
+        <tr>
+          <td><strong>治理/审核层</strong></td>
+          <td>review-store</td>
+          <td>Human Review</td>
+          <td class="match">高度一致</td>
+        </tr>
+        <tr>
+          <td><strong>知识域分类</strong></td>
+          <td>Wiki Page Type</td>
+          <td>K1-K13</td>
+          <td class="match">概念一致</td>
+        </tr>
+        <tr>
+          <td><strong>增量更新</strong></td>
+          <td>ingest-cache</td>
+          <td>增量抽取</td>
+          <td class="match">概念一致</td>
+        </tr>
+        <tr>
+          <td><strong>去重合并</strong></td>
+          <td>dedup + dedup-queue</td>
+          <td>实体去重</td>
+          <td class="match">概念一致</td>
+        </tr>
+        <tr>
+          <td><strong>多语言支持</strong></td>
+          <td>i18n</td>
+          <td>output_language</td>
+          <td class="match">概念一致</td>
+        </tr>
+        <tr>
+          <td><strong>知识图谱</strong></td>
+          <td>graph-filters</td>
+          <td>跨域链接</td>
+          <td class="match">概念一致</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LLM Wiki 深度分析：知识流动与存储机制</title>
+<style>
+:root {
+  --primary: #2563EB;
+  --primary-dark: #1E40AF;
+  --primary-light: #3B82F6;
+  --accent: #06B6D4;
+  --accent2: #8B5CF6;
+  --success: #22C55E;
+  --warning: #F59E0B;
+  --bg-dark: #0F172A;
+  --bg-light: #F8FAFC;
+  --surface: #FFFFFF;
+  --text-primary: #1E293B;
+  --text-secondary: #64748B;
+  --border: #E2E8F0;
+  --radius: 8px;
+  --radius-lg: 16px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif; background: var(--bg-light); color: var(--text-primary); line-height: 1.6; }
+
+.container { max-width: 1400px; margin: 0 auto; padding: 40px 20px; }
+h1 { font-size: 32px; color: var(--primary-dark); margin-bottom: 8px; text-align: center; }
+.subtitle { font-size: 16px; color: var(--text-secondary); text-align: center; margin-bottom: 40px; }
+
+.card { background: var(--surface); border-radius: var(--radius-lg); padding: 32px; margin-bottom: 40px; box-shadow: 0 4px 24px rgba(15,23,42,0.08); }
+.card-title { font-size: 20px; color: var(--primary); margin-bottom: 24px; font-weight: 600; display: flex; align-items: center; gap: 12px; }
+.card-icon { width: 32px; height: 32px; background: var(--primary); color: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+
+/* 核心洞察 */
+.insight-box { background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%); border-radius: var(--radius); padding: 24px; margin-bottom: 32px; border-left: 4px solid var(--primary); }
+.insight-box p { font-size: 15px; line-height: 1.8; }
+.insight-box strong { color: var(--primary-dark); }
+
+/* 存储模型 */
+.storage-flow { display: flex; flex-direction: column; gap: 16px; padding: 20px 0; }
+.storage-row { display: flex; align-items: center; gap: 16px; }
+.storage-node { background: var(--surface); border: 2px solid var(--primary); border-radius: var(--radius); padding: 16px 24px; min-width: 200px; }
+.storage-node h4 { font-size: 15px; color: var(--primary); margin-bottom: 4px; }
+.storage-node p { font-size: 12px; color: var(--text-secondary); }
+.storage-node.active { background: var(--primary); color: white; }
+.storage-node.active h4 { color: white; }
+.storage-arrow { color: var(--text-secondary); font-size: 20px; }
+
+/* 页面类型 */
+.page-types { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.page-type { background: var(--bg-light); border-radius: var(--radius); padding: 20px; border-top: 3px solid var(--accent); }
+.page-type h4 { font-size: 14px; color: var(--primary); margin-bottom: 8px; }
+.page-type p { font-size: 12px; color: var(--text-secondary); }
+
+/* 知识循环图 */
+.cycle-diagram { display: flex; justify-content: center; align-items: center; padding: 40px 20px; position: relative; }
+.cycle-center { position: absolute; width: 120px; height: 120px; background: linear-gradient(135deg, var(--primary) 0%, var(--accent2) 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 14px; text-align: center; z-index: 2; }
+.cycle-ring { position: relative; width: 400px; height: 400px; }
+.cycle-node { position: absolute; width: 100px; height: 100px; background: var(--surface); border: 2px solid var(--primary); border-radius: var(--radius); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; font-size: 13px; }
+.cycle-node h5 { font-size: 13px; color: var(--primary); margin-bottom: 4px; }
+.cycle-node p { font-size: 11px; color: var(--text-secondary); }
+.cycle-node.n1 { top: 0; left: 50%; transform: translateX(-50%); }
+.cycle-node.n2 { top: 50%; right: 0; transform: translateY(-50%); }
+.cycle-node.n3 { bottom: 0; left: 50%; transform: translateX(-50%); }
+.cycle-node.n4 { top: 50%; left: 0; transform: translateY(-50%); }
+.cycle-arrow { position: absolute; width: 60px; height: 2px; background: var(--primary); opacity: 0.5; }
+
+/* 对比表 */
+.compare-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.compare-table th { background: var(--primary); color: white; padding: 14px 16px; text-align: left; font-weight: 600; }
+.compare-table td { padding: 12px 16px; border-bottom: 1px solid var(--border); }
+.compare-table tr:nth-child(even) { background: var(--bg-light); }
+.compare-table .highlight { background: #FEF3C7; font-weight: 600; }
+.compare-table .best { background: #DCFCE7; font-weight: 600; color: #166534; }
+
+/* 六层理念 */
+.concepts-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.concept-card { background: var(--bg-light); border-radius: var(--radius); padding: 24px; border-left: 4px solid var(--accent); }
+.concept-card h4 { font-size: 15px; color: var(--primary); margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+.concept-card h4 span { width: 28px; height: 28px; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+.concept-card p { font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
+
+/* 摄取流程 */
+.ingest-flow { display: flex; flex-direction: column; gap: 0; max-width: 800px; margin: 0 auto; }
+.ingest-step { display: flex; align-items: stretch; }
+.ingest-num { width: 48px; height: 48px; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; flex-shrink: 0; margin-right: 16px; }
+.ingest-content { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 20px; margin-bottom: 12px; }
+.ingest-content h4 { font-size: 15px; color: var(--primary); margin-bottom: 6px; }
+.ingest-content p { font-size: 13px; color: var(--text-secondary); }
+.ingest-line { width: 3px; height: 40px; background: var(--primary); margin-left: 22px; opacity: 0.3; }
+
+/* 三层架构详细 */
+.three-layers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+.layer-card { background: var(--bg-light); border-radius: var(--radius-lg); padding: 28px; text-align: center; }
+.layer-card h4 { font-size: 18px; margin-bottom: 8px; }
+.layer-card p { font-size: 13px; color: var(--text-secondary); margin-bottom: 16px; }
+.layer-detail { text-align: left; font-size: 13px; }
+.layer-detail li { margin-bottom: 8px; padding-left: 16px; position: relative; }
+.layer-detail li::before { content: '•'; position: absolute; left: 0; color: var(--primary); }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>LLM Wiki 深度分析</h1>
+  <p class="subtitle">知识编译、存储与演化机制</p>
+
+  <!-- 核心洞察 -->
+  <div class="card">
+    <div class="insight-box">
+      <p><strong>LLM Wiki 的本质不是"让模型去搜文档回答问题"，而是"让模型把原始资料持续编译成一个可维护、可演化、可复用的知识中间层"。</strong></p>
+      <p style="margin-top: 12px;">这层中间层就是 Wiki，它不是临时上下文，而是<strong>长期资产</strong>。</p>
+    </div>
+  </div>
+
+  <!-- 六大核心理念 -->
+  <div class="card">
+    <div class="card-title">
+      <div class="card-icon">💡</div>
+      六大核心理念
+    </div>
+    <div class="concepts-grid">
+      <div class="concept-card">
+        <h4><span>1</span>知识应被"编译"</h4>
+        <p>摄取时整合，而非查询时检索。像编译源代码一样，先把知识整理成更容易复用的形式。</p>
+      </div>
+      <div class="concept-card">
+        <h4><span>2</span>维护比写更重要</h4>
+        <p>知识库最难的不是写，而是维护。摘要会过时、链接会缺失、冲突会出现——LLM 天然适合这些重复性维护工作。</p>
+      </div>
+      <div class="concept-card">
+        <h4><span>3</span>知识价值在连接</h4>
+        <p>知识不是资料堆积，而是资料之间的关系、概念依赖、观点冲突、证据与结论的映射。页面不是终点，链接网络才是。</p>
+      </div>
+      <div class="concept-card">
+        <h4><span>4</span>问答结果也是资产</h4>
+        <p>好的提问不只是得到答案，还可能产生新的比较分析页、专题总结、关联发现。一次提问可以推动知识库演化。</p>
+      </div>
+      <div class="concept-card">
+        <h4><span>5</span>人负责判断</h4>
+        <p>人筛选来源、引导分析、提出好问题；LLM 负责其余工作。这是"人类策展 + 模型维护"的混合系统，比全自动更现实。</p>
+      </div>
+      <div class="concept-card">
+        <h4><span>6</span>Wiki 是资产</h4>
+        <p>聊天有即时性但没有稳定结构。Wiki 有结构、有链接、有版本、有可回访性。把高价值思考从聊天历史里打捞出来。</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 三层架构 -->
+  <div class="card">
+    <div class="card-title">
+      <div class="card-icon">🏗</div>
+      三层架构解析
+    </div>
+    <div class="three-layers">
+      <div class="layer-card" style="border-top: 4px solid var(--primary);">
+        <h4 style="color: var(--primary);">Raw Sources</h4>
+        <p>事实底座，Source of Truth</p>
+        <ul class="layer-detail">
+          <li>原始资料仓，原则上不可修改</li>
+          <li>保留可追溯性</li>
+          <li>防止 LLM 直接污染原始证据</li>
+          <li>让所有结论都能回到源头验证</li>
+        </ul>
+      </div>
+      <div class="layer-card" style="border-top: 4px solid var(--success);">
+        <h4 style="color: var(--success);">Wiki</h4>
+        <p>可工作的知识中间层</p>
+        <ul class="layer-detail">
+          <li>结构化、可链接、可更新</li>
+          <li>语义整理后的知识视图</li>
+          <li>高信噪比的工作面</li>
+          <li>人机协作的主要界面</li>
+        </ul>
+      </div>
+      <div class="layer-card" style="border-top: 4px solid var(--warning);">
+        <h4 style="color: var(--warning);">Schema</h4>
+        <p>纪律系统，行为约束</p>
+        <ul class="layer-detail">
+          <li>目录结构与页面类型</li>
+          <li>命名规范与引用格式</li>
+          <li>摄取/查询/Lint 流程</li>
+          <li>把"提示词"变成"制度"</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- 存储机制 -->
+  <div class="card">
+    <div class="card-title">
+      <div class="card-icon">📦</div>
+      知识存储机制：不是存原文，而是存结构化表达
+    </div>
+    <div class="page-types">
+      <div class="page-type">
+        <h4>📄 来源摘要页</h4>
+        <p>一份资料的摘要、关键论点、引用摘录、相关页面</p>
+      </div>
+      <div class="page-type">
+        <h4>👤 实体页</h4>
+        <p>人物、公司、项目、术语、产品等</p>
+      </div>
+      <div class="page-type">
+        <h4>💡 概念页</h4>
+        <p>理论、方法、框架等抽象概念</p>
+      </div>
+      <div class="page-type">
+        <h4>📋 主题页</h4>
+        <p>围绕某个问题域的持续综合</p>
+      </div>
+      <div class="page-type">
+        <h4>⚖️ 对比页</h4>
+        <p>A vs B、方案比较、观点比较</p>
+      </div>
+      <div class="page-type">
+        <h4>📊 综合判断页</h4>
+        <p>多来源汇聚的结论与判断</p>
+      </div>
+      <div class="page-type">
+        <h4>🗂️ 索引页</h4>
+        <p>index.md，导航与检索入口</p>
+      </div>
+      <div class="page-type">
+        <h4>📜 日志页</h4>
+        <p>log.md，知识库演化轨迹</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 知识循环 -->
+  <div class="card">
+    <div class="card-title">
+      <div class="card-icon">🔄</div>
+      读写闭环：知识如何被存取与增强
+    </div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px;">
+      <div>
+        <h4 style="color: var(--primary); margin-bottom: 16px; font-size: 16px;">摄取流程（写）</h4>
+        <div class="ingest-flow">
+          <div class="ingest-step">
+            <div class="ingest-num">1</div>
+            <div class="ingest-content">
+              <h4>新增原始资料</h4>
+              <p>PDF、文档、网页、音频等进入系统</p>
+            </div>
+          </div>
+          <div class="ingest-line"></div>
+          <div class="ingest-step">
+            <div class="ingest-num">2</div>
+            <div class="ingest-content">
+              <h4>LLM 阅读来源</h4>
+              <p>分析内容、结构、关键信息</p>
+            </div>
+          </div>
+          <div class="ingest-line"></div>
+          <div class="ingest-step">
+            <div class="ingest-num">3</div>
+            <div class="ingest-content">
+              <h4>生成来源摘要页 + 识别实体/概念</h4>
+              <p>结构化整理，分类入库</p>
+            </div>
+          </div>
+          <div class="ingest-line"></div>
+          <div class="ingest-step">
+            <div class="ingest-num">4</div>
+            <div class="ingest-content">
+              <h4>更新相关 Wiki 页面</h4>
+              <p>归并到已有结构，标记冲突</p>
+            </div>
+          </div>
+          <div class="ingest-line"></div>
+          <div class="ingest-step">
+            <div class="ingest-num">5</div>
+            <div class="ingest-content">
+              <h4>更新 index.md + 追加 log.md</h4>
+              <p>维护导航索引和操作日志</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <h4 style="color: var(--accent2); margin-bottom: 16px; font-size: 16px;">查询流程（读）</h4>
+        <div class="ingest-flow">
+          <div class="ingest-step">
+            <div class="ingest-num" style="background: var(--accent2);">1</div>
+            <div class="ingest-content">
+              <h4>用户提问</h4>
+              <p>研究问题、信息查询、对比需求</p>
+            </div>
+          </div>
+          <div class="ingest-line"></div>
+          <div class="ingest-step">
+            <div class="ingest-num" style="background: var(--accent2);">2</div>
+            <div class="ingest-content">
+              <h4>读取 index.md 或搜索工具</h4>
+              <p>定位相关页面入口</p>
+            </div>
+          </div>
+          <div class="ingest-line"></div>
+          <div class="ingest-step">
+            <div class="ingest-num" style="background: var(--accent2);">3</div>
+            <div class="ingest-content">
+              <h4>读取 Wiki 页面并综合</h4>
+              <p>高信噪比知识层，而非原始噪声</p>
+            </div>
+          </div>
+          <div class="ingest-line"></div>
+          <div class="ingest-step">
+            <div class="ingest-num" style="background: var(--accent2);">4</div>
+            <div class="ingest-content">
+              <h4>必要时回溯 Raw Sources</h4>
+              <p>当 Wiki 存在不确定性时回溯验证</p>
+            </div>
+          </div>
+          <div class="ingest-line"></div>
+          <div class="ingest-step">
+            <div class="ingest-num" style="background: var(--accent2);">5</div>
+            <div class="ingest-content">
+              <h4>生成答案 + 高价值结果写回 Wiki</h4>
+              <p>闭环：取知识本身也增强存知识</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 四类系统对比 -->
+  <div class="card">
+    <div class="card-title">
+      <div class="card-icon">📊</div>
+      四类知识系统全景对比
+    </div>
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th>维度</th>
+          <th>传统知识库</th>
+          <th>RAG</th>
+          <th>GraphRAG</th>
+          <th>LLM Wiki</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>核心目标</strong></td>
+          <td>人工整理</td>
+          <td>从文档回答问题</td>
+          <td>利用图结构提升检索</td>
+          <td class="highlight">知识持续沉淀与演化</td>
+        </tr>
+        <tr>
+          <td><strong>主维护者</strong></td>
+          <td>人</td>
+          <td>系统索引+模型</td>
+          <td>图构建+模型</td>
+          <td class="highlight">LLM代理+人类策展</td>
+        </tr>
+        <tr>
+          <td><strong>主要存储</strong></td>
+          <td>文档/页面</td>
+          <td>原文切块索引</td>
+          <td>图谱+摘要+索引</td>
+          <td class="highlight">Markdown Wiki+索引+日志</td>
+        </tr>
+        <tr>
+          <td><strong>查询对象</strong></td>
+          <td>人写页面</td>
+          <td>原始片段</td>
+          <td>图上节点/社区</td>
+          <td class="highlight">Wiki页面，必要时回源</td>
+        </tr>
+        <tr>
+          <td><strong>长期演化</strong></td>
+          <td>一般</td>
+          <td>弱</td>
+          <td>中等</td>
+          <td class="best">强</td>
+        </tr>
+        <tr>
+          <td><strong>人类可读性</strong></td>
+          <td class="best">强</td>
+          <td>弱</td>
+          <td>中等</td>
+          <td class="best">强</td>
+        </tr>
+        <tr>
+          <td><strong>自动化维护</strong></td>
+          <td>弱</td>
+          <td>中等</td>
+          <td>中等偏强</td>
+          <td class="best">强</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+</body>
+</html>
